@@ -1,0 +1,15 @@
+services:
+  tmf-mock:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      TMF_MOCK_APIS: "638,639,641"
+      TMF_MOCK_SEED: "1"
+      TMF_MOCK_BASE_URL: "http://localhost:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
