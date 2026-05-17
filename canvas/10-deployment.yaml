@@ -1,0 +1,77 @@
+﻿# Deployment + Service for tmf-mock running inside the local ODA Canvas.
+#
+# - Image pinned to 0.1.1 for reproducibility.
+# - Probes target /health (verified to exist in tmf_mock/server.py).
+# - Env vars match the defaults baked into the Dockerfile but we set them
+#   explicitly here so the Kubernetes manifest is the single source of truth.
+# - Resource requests/limits are conservative.
+# - Labels tie this Deployment to the ODA Component CRD and to the Service
+#   selector. The component-operator uses componentName to find resources.
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tmf-mock
+  namespace: components
+  labels:
+    app: tmf-mock
+    oda.tmforum.org/componentName: tmf-devkit-mock
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      impl: tmf-mock-svc
+  template:
+    metadata:
+      labels:
+        app: tmf-mock
+        impl: tmf-mock-svc
+        oda.tmforum.org/componentName: tmf-devkit-mock
+    spec:
+      containers:
+        - name: tmf-mock
+          image: mchavan23/tmf-mock:0.1.1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+          env:
+            - name: TMF_MOCK_APIS
+              value: "638,639,641"
+            - name: TMF_MOCK_SEED
+              value: "1"
+            - name: TMF_MOCK_HOST
+              value: "0.0.0.0"
+            - name: TMF_MOCK_PORT
+              value: "8000"
+            - name: TMF_MOCK_BASE_URL
+              value: "http://tmf-mock-svc.components.svc.cluster.local:8000"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            timeoutSeconds: 2
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 1000

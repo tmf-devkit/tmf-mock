@@ -1,0 +1,24 @@
+﻿# ClusterIP Service fronting the tmf-mock pod.
+#
+# The Component CRD coreFunction.exposedAPIs[].implementation field
+# refers to this Service by name. The api-operator-istio reads that name
+# and builds an Istio VirtualService routing external traffic to it.
+#
+# Port 8000 (no remapping) to avoid an extra layer of confusion in debugging.
+apiVersion: v1
+kind: Service
+metadata:
+  name: tmf-mock-svc
+  namespace: components
+  labels:
+    app: tmf-mock
+    oda.tmforum.org/componentName: tmf-devkit-mock
+spec:
+  type: ClusterIP
+  selector:
+    impl: tmf-mock-svc
+  ports:
+    - name: http
+      port: 8000
+      targetPort: 8000
+      protocol: TCP

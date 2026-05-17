@@ -1,0 +1,79 @@
+﻿# ODA Component manifest for tmf-devkit-mock.
+#
+# Applying this triggers the full Canvas operator chain:
+#   1. compcrdwebhook validates the YAML against the v1 CRD schema.
+#   2. component-operator picks it up, sets status to Installing.
+#   3. component-operator creates one ExposedAPI CRD per declared API.
+#   4. api-operator-istio creates an Istio VirtualService per ExposedAPI.
+#   5. identityconfig-operator processes securityFunction. Because tmf-mock
+#      does not implement TMF669 PartyRole, expect a non-Ready condition.
+#      That observation is the primary learning of Stage 1a.
+#   6. canvas-depapi-op sees dependentAPIs: [] and is a no-op.
+#
+# Path prefixes below are the real ones served by tmf-mock today,
+# extracted from tmf_mock/routers/*.py.
+apiVersion: oda.tmforum.org/v1
+kind: Component
+metadata:
+  name: tmf-devkit-mock
+  namespace: components
+  labels:
+    oda.tmforum.org/componentName: tmf-devkit-mock
+spec:
+  componentMetadata:
+    id: tmf-devkit-mock
+    name: tmf-devkit-mock
+    version: "0.1.1"
+    description: >-
+      TMF DevKit mock server registered as an ODA Component for Stage 1a
+      learning. Exposes TMF638 Service Inventory, TMF639 Resource Inventory,
+      and TMF641 Service Ordering against in-memory domain-aware seed data.
+    functionalBlock: CoreCommerce
+    publicationDate: "2026-05-17T00:00:00Z"
+    status: specified
+    maintainers:
+      - name: Manoj Chavan
+        email: manoj.chavan23@gmail.com
+    owners:
+      - name: Manoj Chavan
+        email: manoj.chavan23@gmail.com
+
+  coreFunction:
+    exposedAPIs:
+      - name: serviceinventory
+        id: TMF638
+        apiType: openapi
+        implementation: tmf-mock-svc
+        path: /tmf-api/serviceInventoryManagement/v4
+        port: 8000
+        specification:
+          - url: https://raw.githubusercontent.com/tmforum-apis/TMF638_ServiceInventory/master/TMF638-ServiceInventory-v4.0.0.swagger.json
+            version: "4.0.0"
+
+      - name: resourceinventory
+        id: TMF639
+        apiType: openapi
+        implementation: tmf-mock-svc
+        path: /tmf-api/resourceInventoryManagement/v4
+        port: 8000
+        specification:
+          - url: https://raw.githubusercontent.com/tmforum-apis/TMF639_ResourceInventory/master/TMF639-ResourceInventory-v4.0.0.swagger.json
+            version: "4.0.0"
+
+      - name: serviceordering
+        id: TMF641
+        apiType: openapi
+        implementation: tmf-mock-svc
+        path: /tmf-api/serviceOrdering/v4
+        port: 8000
+        specification:
+          - url: https://raw.githubusercontent.com/tmforum-apis/TMF641_ServiceOrder/master/TMF641-ServiceOrder-v4.0.0.swagger.json
+            version: "4.0.0"
+
+    dependentAPIs: []
+
+  managementFunction:
+    exposedAPIs: []
+
+  securityFunction:
+    canvasSystemRole: Admin

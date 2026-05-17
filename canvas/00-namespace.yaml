@@ -1,0 +1,17 @@
+﻿# Namespace for ODA Components deployed into the local Canvas.
+#
+# Canvas convention: components live in their own namespace, NOT in the
+# `canvas` namespace (which is reserved for Canvas operators themselves).
+#
+# istio-injection=enabled tells istiod to auto-inject the Envoy sidecar
+# into pods in this namespace, so they participate in the service mesh.
+# The api-operator-istio expects components to be mesh-injected when it
+# creates VirtualServices for their ExposedAPIs.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: components
+  labels:
+    istio-injection: enabled
+    # Marker so we can find Stage 1a resources later
+    tmf-devkit/stage: "1a"
